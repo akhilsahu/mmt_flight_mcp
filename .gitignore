@@ -1,0 +1,12 @@
+# Environments
+.env
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Logs and temporary files
+latest_logs/
+downloaded_files/
