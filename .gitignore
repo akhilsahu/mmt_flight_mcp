@@ -10,3 +10,19 @@ downloads/
 # Logs and temporary files
 latest_logs/
 downloaded_files/
+
+scrapper/ss/
+scrapper/ss/*.png
+scrapper/ss/*.jpg
+scrapper/ss/*.jpeg
+scrapper/ss/*.html
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Data
+data/
+data/*.csv
+data/*.json
+data/*.xlsx
