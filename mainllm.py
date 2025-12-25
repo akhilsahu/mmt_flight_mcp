@@ -4,9 +4,11 @@ Uses LangGraph for orchestration with specialized math and weather agents
 """
 
 from typing import Annotated, Literal, TypedDict
+import uuid
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import StateGraph, MessagesState, START, END
 from langchain.agents import create_agent
 from langgraph.types import Command
@@ -230,9 +232,9 @@ async def create_supervisor_graph():
             "__end__": END
         }
     )
-    
+    checkpointer = InMemorySaver()  
     # Compile the graph
-    graph = workflow.compile()
+    graph = workflow.compile(checkpointer=checkpointer)
     
     show_wf_image(graph)
     return graph
@@ -264,8 +266,9 @@ async def run_multi_agent_system(query: str):
     print(f"\n{'='*60}")
     print(f"Query: {query}")
     print(f"{'='*60}\n")
+    config = {"configurable": {"thread_id": str(uuid.uuid4())},"recursion_limit": 100}
     
-    async for event in graph.astream(input_state, stream_mode="values"):
+    async for event in graph.astream(input_state, config, stream_mode="values"):
         if "messages" in event:
             last_message = event["messages"][-1]
             print(f"{last_message.type}: {last_message.content}\n")
@@ -280,8 +283,12 @@ if __name__ == "__main__":
     async def main():
         # Example queries
         queries = [
+            "hi! I'm bob",
             "What is 25 * 47 + 123/5?",
+            "Now add 10 to the result?",
+
             "What's the weather in New York?",
+            "What is my name?",
            # "Calculate the square root of 144"
         ]
         

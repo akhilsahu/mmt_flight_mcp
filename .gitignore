@@ -6,7 +6,7 @@ venv/
 # Python
 __pycache__/
 *.pyc
-
+downloads/
 # Logs and temporary files
 latest_logs/
 downloaded_files/

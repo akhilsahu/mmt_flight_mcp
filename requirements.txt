@@ -1,0 +1,10 @@
+langchain-openai
+langchain-core
+python-dotenv
+langgraph
+httpx
+beautifulsoup4
+seleniumbase
+uvicorn
+fastapi
+pandas

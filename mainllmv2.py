@@ -2,8 +2,9 @@
 Multi-Agent System with Supervisor and MCP Tools
 Uses LangGraph for orchestration with specialized math and weather agents
 """
+import uuid
 from models.response_models import GeneralResponse
-
+import asyncio
 from typing import Annotated, Literal, TypedDict
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -11,6 +12,7 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.graph import StateGraph, MessagesState, START, END
 from langchain.agents import create_agent
 from langgraph.types import Command
+from langgraph.checkpoint.memory import InMemorySaver  
 from dotenv import load_dotenv
 import os
 from agents.supervisor_agent import supervisor_node
@@ -33,6 +35,7 @@ async def get_agent(model_config,system_prompt,tool_config):
         **tool_config
     })
     tools = await client.get_tools()
+
     agent = create_agent(
         model_config,
         tools,
@@ -59,7 +62,7 @@ def get_agent_node(agent_name: str):
 
 
 # Routing function
-def route_after_supervisor(state: SupervisorState) -> Literal["math_agent", "weather_agent", "flight_search_agent", "__end__"]:
+def route_after_supervisor(state: SupervisorState) -> Literal["math_agent", "weather_agent", "flight_search_agent", "conversation_agent", "__end__"]:
     """Route based on supervisor's decision"""
     next_agent = state.get("next", "FINISH").lower()
     print(f"Next agent: {next_agent}")
@@ -67,9 +70,11 @@ def route_after_supervisor(state: SupervisorState) -> Literal["math_agent", "wea
         return "math_agent"
     elif next_agent == "weather_agent":
         return "weather_agent"
-    # el
+ 
     if next_agent == "flight_search_agent":
         return "flight_search_agent"
+    elif next_agent == "conversation_agent":
+        return "conversation_agent"
     else:
         return "__end__"
 
@@ -86,8 +91,10 @@ def route_after_agent(state: SupervisorState) -> Literal["supervisor", "__end__"
 
 # Build the graph
 async def create_supervisor_graph():
+#def create_supervisor_graph():
     """Create the multi-agent graph with supervisor"""
-    
+    checkpointer = InMemorySaver()  
+
     # Initialize graph
     workflow = StateGraph(SupervisorState)
  
@@ -109,17 +116,17 @@ async def create_supervisor_graph():
     )
     
     # Route back from agents to supervisor for potential follow-up
-    for agent_name in AGENT_CONFIG.keys():
-        workflow.add_conditional_edges(
-            agent_name,
-            route_after_agent,
-            {
-                "supervisor": "supervisor",   
-                "__end__": END
-            }
-        )
-    # Compile the graph
-    graph = workflow.compile()
+    # for agent_name in AGENT_CONFIG.keys():
+    #     workflow.add_conditional_edges(
+    #         agent_name,
+    #         route_after_agent,
+    #         {
+    #             "supervisor": "supervisor",   
+    #             "__end__": END
+    #         }
+    #     )
+     
+    graph = workflow.compile(checkpointer=checkpointer)
     
     show_wf_image(graph)
     return graph
@@ -141,7 +148,6 @@ async def run_multi_agent_system(query: str):
     
     # Create the graph
     graph = await create_supervisor_graph()
-    
     # Prepare input
     input_state = {
         "messages": [HumanMessage(content=query)]
@@ -151,10 +157,26 @@ async def run_multi_agent_system(query: str):
     print(f"\n{'='*60}")
     print(f"Query: {query}")
     print(f"{'='*60}\n")
+    #config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+    config = {"configurable": {"thread_id": str(uuid.uuid4())},"recursion_limit": 100}
+     
+    async for chunk in graph.astream(
+        {"messages": [{"role": "user", "content": "hi! I'm bob"}]},
+        config,  
+        stream_mode="values"
+    ):
+        chunk["messages"][-1].pretty_print()
+
+    async for chunk in graph.astream(
+        {"messages": [{"role": "user", "content": "what's my name?"}]},
+        config,  
+        stream_mode="values"
+    ):
+        chunk["messages"][-1].pretty_print()
     
     async for event in graph.astream(
         input_state,
-        config={"recursion_limit": 100},
+        config=config,
         stream_mode="values"
     ):
         if "messages" in event:
@@ -164,22 +186,75 @@ async def run_multi_agent_system(query: str):
     return event
 
 
+async def chattie():
+    
+    """Run the chatbot application."""
+    print("Starting Agentic Chatbot...")
+
+    # Create the graph
+    graph = await create_supervisor_graph()
+    query = "hi! I'm bob"
+    # Prepare input
+    input_state = {
+        "messages": [HumanMessage(content=query)]
+    }
+    
+    # Stream the execution
+    print(f"\n{'='*60}")
+    print(f"Query: {query}")
+    print(f"{'='*60}\n")
+    #config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+    config = {"configurable": {"thread_id": str(uuid.uuid4())},"recursion_limit": 100}
+
+    await graph.ainvoke(
+        {"messages": [{"role": "user", "content": "hi! Find Flights from LKO to DEL on 28 Dec 2025"}]},
+        config,  
+        stream_mode="values"
+    )  
+    print("Chatbot initialized. Type 'exit' to quit.")
+
+    while True:
+        try:
+            user_input = input("You: ").strip()
+            if user_input.lower() in ['exit', 'quit']:
+                print("Goodbye!")
+                break
+            
+            if user_input: 
+                response  = await graph.ainvoke(
+                 {"messages": [{"role": "user", "content": user_input}]},
+                config,  
+                stream_mode="values"
+            ) 
+                print(f"Bot: {response['messages'][-1].content}")
+            # print(f"Data: {data}")
+        except Exception as e:
+            print(f"Error: {e}")
+            break
+
 # Example usage
 if __name__ == "__main__":
-    import asyncio
+    try:
+        asyncio.run(chattie())
+    except KeyboardInterrupt:
+        pass
+    exit()
+    
     
     async def main():
         # Example queries
         queries = [
-            
-           # "What is 25 * 47 + 123/5?",
+            "Add 2 and 4 and going forward?",
+            "Now add 10 to the result?",
             #"What's the weather in New York?",
-           "Use flight search agent to search for flights",
-            "Search for some flights from IXL to LKO on 2025-12-10",
+          # "Use flight search agent to search for flights",
+          #  "Search for some flights from IXL to LKO on 2025-12-10",
+          #  "Add 5 and 2",
+          #  "Now calculate the square root of 144 and add to above result",
             #"Calculate the square root of 144"
         ]
         
-        for query in queries:
+        for query in queries:  
             await run_multi_agent_system(query)
             print("\n" + "="*60 + "\n")
     
