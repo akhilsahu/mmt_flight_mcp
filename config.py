@@ -1,4 +1,6 @@
 from langchain_openai import ChatOpenAI
+
+
 AGENT_CONFIG = {
     "math_agent": {
         "model": ChatOpenAI(model="gpt-4o"),
@@ -26,7 +28,9 @@ AGENT_CONFIG = {
         "model": ChatOpenAI(model="gpt-4o"),
         "system_prompt": '''You are a specialized flight search agent. Use the available flight search tools to search for flights between two cities on a given date. 
         Add a note field to each flight in the result like cheapest fastest or any cool offer.
-        example for source: mmt, expedia,ixigo  or all - should be all until user asks for specific source
+        example for source: mmt, expedia,ixigo  or all - should be all until user asks for specific source.
+        The data will be retrieved in format: data[flight_no][source] = d
+        Do not change json data format 
         ''',
         "tool_config": {
             "flight_search": {

@@ -206,13 +206,13 @@ async def chattie():
     #config = {"configurable": {"thread_id": str(uuid.uuid4())}}
     config = {"configurable": {"thread_id": str(uuid.uuid4())},"recursion_limit": 100}
 
-    await graph.ainvoke(
-        {"messages": [{"role": "user", "content": "hi! Find Flights from LKO to DEL on 28 Dec 2025"}]},
+    response =  await graph.ainvoke(
+        {"messages": [{"role": "user", "content": "hi! Find Flights from LKO to DEL on 31 Dec 2025"}]},
         config,  
         stream_mode="values"
     )  
     print("Chatbot initialized. Type 'exit' to quit.")
-
+    print(f"Bot: {response['messages'][-1].content}")
     while True:
         try:
             user_input = input("You: ").strip()

@@ -1,5 +1,11 @@
 from seleniumbase import SB
-
+import logging,sys
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    stream=sys.stderr 
+)
+logger = logging.getLogger(__name__)
 def scrap_data(origin="LKO", destination="DEL", travel_date="02/01/2026"):
     '''
     Format for mmt: travel_date="18/11/2025"
@@ -7,6 +13,7 @@ def scrap_data(origin="LKO", destination="DEL", travel_date="02/01/2026"):
     Format for expedia: travel_date=02/01/2026
     '''
     #with SB(uc=True, test=True, headless2=True) as sb:
+    logger.info(f"Scraping Expedia for {origin} to {destination} on {travel_date}")
     try:
         with SB(uc=True, test=True) as sb:    
             #url = f"https://www.makemytrip.com/flight/search?itinerary={origin}-{destination}-{travel_date}&tripType=O&paxType=A-1_C-0_I-0&intl=false&cabinClass=E&lang=eng"

@@ -1,5 +1,6 @@
 from seleniumbase import SB
-import logging,sys
+import logging,sys,random,string
+from scrapper.scrap_config import HTML_FILE_PATH_MMT
 # --- Configure Logging to use STDERR ---
 logging.basicConfig(
     level=logging.INFO,
@@ -7,11 +8,9 @@ logging.basicConfig(
     stream=sys.stderr 
 )
 logger = logging.getLogger(__name__)
-
- 
-
+  
 # --- Configuration ---
-HTML_FILE_PATH = "./scrapper/ss/mmt1_res.html" 
+
 def scrap_sb(origin="LKO", destination="IXL", travel_date="18/11/2025"):
     with SB(uc=True, test=True) as sb:
         url = f"https://www.makemytrip.com/flight/search?itinerary={origin}-{destination}-{travel_date}&tripType=O&paxType=A-1_C-0_I-0&intl=false&cabinClass=E&lang=eng"
@@ -22,13 +21,15 @@ def scrap_sb(origin="LKO", destination="IXL", travel_date="18/11/2025"):
         sb.get_page_source()
         #sb.save_screenshot('./ss/mmt_res.png', full_page=True)
         sr = sb.get_page_source()
-        
-        with open("./scrapper/mmt_res.html", "w", encoding="utf-8") as f:
+        rand_choice = random.choice(string.ascii_lowercase)
+
+        with open(f"./scrapper/mmt_res_{rand_choice}.html", "w", encoding="utf-8") as f:
             f.write(sr)
         logger.info("Scraping completed")
         sb.quit()
-def scrap_data(origin, destination, travel_date):
+def scrap_data(origin, destination, travel_date,random_string):
     """Synchronous scraping function to run in thread"""
+    logger.info(f"Scraping MMT for {origin} to {destination} on {travel_date}")
     try:
         with SB(uc=True, test=True, xvfb=True) as sb:
             url = f"https://www.makemytrip.com/flight/search?itinerary={origin}-{destination}-{travel_date}&tripType=O&paxType=A-1_C-0_I-0&intl=false&cabinClass=E&lang=eng"
@@ -43,13 +44,14 @@ def scrap_data(origin, destination, travel_date):
             sr = sb.get_page_source()
             
             import os
-            os.makedirs(os.path.dirname(HTML_FILE_PATH), exist_ok=True)
+            os.makedirs(os.path.dirname(HTML_FILE_PATH_MMT), exist_ok=True)
             
-            with open(HTML_FILE_PATH, "w", encoding="utf-8") as f:
+            html_file =  HTML_FILE_PATH_MMT.format(unqiuas=random_string) #unqiuas
+            with open(html_file, "w", encoding="utf-8") as f:
                 f.write(sr)
             logger.info("Scraping completed successfully.")
             sb.quit()
-            return True
+            return html_file
     except Exception as e:
         logger.error(f"Error during scraping: {e}")
         raise e

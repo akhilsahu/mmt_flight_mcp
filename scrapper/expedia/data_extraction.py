@@ -12,22 +12,6 @@ logger = logging.getLogger(__name__)
 HTML_FILE_PATH = "./scrapper/ss/mmt_res_expedia.html"
 OUTPUT_CSV_PATH = "flight_data_extracted.csv"
 
-# --- Common MMT Selector Clues (Adjust these based on your specific HTML) ---
-# 1. Main container for a single flight listing
-FLIGHT_CARD_SELECTOR = 'div[class*="clusterContent"]'
-
-FLIGHT_LISTING_SELECTOR = 'div[data-test*=component-clusterItem]'
-# 2. Selector for the Airline Name
-AIRLINE_SELECTOR = 'p[class*="airlineName"]'
-AIRLINE_CODE_SELECTOR = 'p[class*="fliCode"]'
-# 3. Selector for Departure/Arrival Time (often grouped with city)
-TIME_CITY_GROUP_SELECTOR = 'p[class*="flightTimeInfo"]'
-# 4. Selector for Flight Duration (often in the center)
-START_DURATION_SELECTOR = 'div[class*="timeInfoLeft"]'
-LAYOVER_DURATION_SELECTOR = 'div[class*="stop-info"]'
-END_DURATION_SELECTOR = 'div[class*="timeInfoRight"]'
-# 5. Selector for the Final Price
-PRICE_SELECTOR = 'div[class*="priceSection"]'
 
 def write_html_to_file(html_content, filename="./scrapper/ss/mmt_pretty.html"):
     with open(filename, 'w', encoding='utf-8') as f:
@@ -96,7 +80,10 @@ def extract_flight_data(html_content):
                     'Layover_Duration': layover_duration,
                     'Layover_City': layover_city,
                     'Price': price_element,
-                    'Offers': None
+                    
+                    'Offers': None,
+                    'source': 'expedia'
+
                 })
         except Exception as e:
             logger.info(f"Error processing flight: {e}")

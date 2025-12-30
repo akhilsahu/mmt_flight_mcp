@@ -3,15 +3,14 @@ from bs4 import BeautifulSoup
 import re
 import logging
 import sys
+from scrapper.scrap_config import HTML_FILE_PATH_MMT
+#from scrap_config import HTML_FILE_PATH_MMT
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     stream=sys.stderr 
 )
 logger = logging.getLogger(__name__)
-# --- Configuration ---
-HTML_FILE_PATH = "./scrapper/ss/mmt1_res.html"
-OUTPUT_CSV_PATH = "flight_data_extracted.csv"
 
 # --- Common MMT Selector Clues (Adjust these based on your specific HTML) ---
 # 1. Main container for a single flight listing
@@ -59,6 +58,9 @@ def extract_flight_data(html_content):
             airline_element = flight_card.select_one(AIRLINE_SELECTOR)
             airline = airline_element.text.strip() if airline_element else "N/A"
 
+            airline_code_element = flight_card.select_one(AIRLINE_CODE_SELECTOR)
+            airline_code = airline_code_element.text.strip() if airline_code_element else "N/A"
+
             # 2. Extract Time and City information (Departure and Arrival)
             time_city_groups = flight_card.select(TIME_CITY_GROUP_SELECTOR)
             
@@ -100,6 +102,7 @@ def extract_flight_data(html_content):
 
             flight_data.append({
                 'Airline': airline,
+                "flight_no": airline_code,
                 'Departure_Time': departure_time,
                 'Departure_City': departure_city,
                 'Arrival_Time': arrival_time,
@@ -108,7 +111,8 @@ def extract_flight_data(html_content):
                 'Layover_City': layover_city,
                 'Arrival_City': arrival_city,
                 'Price': raw_price,
-                'Offers': offers
+                'Offers': offers,
+                'source': 'mmt'
             })
 
         except Exception as e:
@@ -134,13 +138,14 @@ def save_to_csv(data, filename):
         logger.error(f"Error saving to CSV: {e}")
 
 
-def parse_flight_data():
+def parse_flight_data(unquas_file_code):
     """Main function to run the script."""
     try:
-        with open(HTML_FILE_PATH, 'r', encoding='utf-8') as f:
+        html_file_path = HTML_FILE_PATH_MMT.format(unqiuas=unquas_file_code)
+        with open(html_file_path, 'r', encoding='utf-8') as f:
             html_content = f.read()
     except FileNotFoundError:
-        logger.error(f"Error: The file '{HTML_FILE_PATH}' was not found.")
+        logger.error(f"Error: The file '{html_file_path}' was not found.")
         logger.error("Please ensure the script is in the same directory as 'mmt_res.html'.")
         return
     except Exception as e:
@@ -152,5 +157,7 @@ def parse_flight_data():
     #save_to_csv(flight_data, OUTPUT_CSV_PATH)
 
 
-if __name__ == "__main__":
-    parse_flight_data()
+# if __name__ == "__main__":
+
+#     unquas_file_code
+#     parse_flight_data()
