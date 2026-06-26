@@ -5,24 +5,32 @@ venv/
 
 # Python
 __pycache__/
+**/__pycache__/
 *.pyc
+**/*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Downloads / temp
 downloads/
-# Logs and temporary files
-latest_logs/
 downloaded_files/
 
+# Logs
+latest_logs/
+
+# Scraped HTML snapshots (raw data, not source)
 scrapper/ss/
-scrapper/ss/*.png
-scrapper/ss/*.jpg
-scrapper/ss/*.jpeg
-scrapper/ss/*.html
+
+# Scraped data files
+*.csv
+*.json
+*.xlsx
+
 # IDE
 .idea/
 .vscode/
 *.swp
-
-# Data
-data/
-data/*.csv
-data/*.json
-data/*.xlsx
+*.swo
