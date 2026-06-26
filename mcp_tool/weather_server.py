@@ -95,7 +95,37 @@ async def get_forecast(latitude: float, longitude: float) -> str:
 
     return "\n---\n".join(forecasts)
 
-
+# Add this tool to your existing weather_server.py
+@mcp.tool()
+async def geocode_location(location_name: str) -> dict[str, Any]:
+    """Convert location name to latitude/longitude coordinates.
+    
+    Args:
+        location_name: City name or address (e.g., 'New York', 'London')
+    
+    Returns:
+        Dict with lat/lon or error message
+    """
+    try:
+        # Using Open-Meteo geocoding API (free, no key needed)
+        url = f"https://geocoding-api.open-meteo.com/v1/search?name={location_name}&count=1&language=en&format=json"
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, timeout=10.0)
+            data = response.json()
+            
+        if data.get("results"):
+            result = data["results"][0]
+            return {
+                "success": True,
+                "location": result["name"],
+                "latitude": result["latitude"],
+                "longitude": result["longitude"],
+                "country": result["country"]
+            }
+        else:
+            return {"success": False, "error": f"Location '{location_name}' not found"}
+    except Exception as e:
+        return {"success": False, "error": f"Geocoding failed: {str(e)}"}
 def main():
     # Initialize and run the server
     mcp.run(transport='stdio')

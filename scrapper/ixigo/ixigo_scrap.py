@@ -23,7 +23,7 @@ def scrap_data(origin="LKO", destination="DEL", travel_date="25122025",uniquas=N
 
         sb.activate_cdp_mode(url)
         sb.activate_jquery()
-        sb.sleep(12)
+        sb.sleep(18)
         #document.elementFromPoint(2, 5).click();
         sb.execute_script("jQuery, document.elementFromPoint(2, 5).click();")
         

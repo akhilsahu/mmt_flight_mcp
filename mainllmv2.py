@@ -115,16 +115,6 @@ async def create_supervisor_graph():
         }
     )
     
-    # Route back from agents to supervisor for potential follow-up
-    # for agent_name in AGENT_CONFIG.keys():
-    #     workflow.add_conditional_edges(
-    #         agent_name,
-    #         route_after_agent,
-    #         {
-    #             "supervisor": "supervisor",   
-    #             "__end__": END
-    #         }
-    #     )
      
     graph = workflow.compile(checkpointer=checkpointer)
     
@@ -184,7 +174,6 @@ async def run_multi_agent_system(query: str):
             print(f"{last_message.type}: {last_message.content}\n")
     
     return event
-
 
 async def chattie():
     

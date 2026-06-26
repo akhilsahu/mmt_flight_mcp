@@ -35,7 +35,7 @@ def scrap_data(origin, destination, travel_date,random_string):
             url = f"https://www.makemytrip.com/flight/search?itinerary={origin}-{destination}-{travel_date}&tripType=O&paxType=A-1_C-0_I-0&intl=false&cabinClass=E&lang=eng"
             sb.activate_cdp_mode(url)
             
-            sb.sleep(5)
+            sb.sleep(10)
             try:
                 sb.click('button.priceLockProCtaButton.whiteText')
             except Exception:
